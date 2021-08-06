@@ -1,7 +1,15 @@
 import 'package:flutter/material.dart';
 
 class AppColors {
-  static final addButton = Color(0xff3D79B1);
+  // colors for light theme
+  static final bgLight = Color(0xffFDFDFD);
+  static final bgAddTaskFieldLight = Color(0xffEBF1F5);
+  static final textLight = Color(0xff8F8F9E);
+  static final textLabelLight = Color(0xff7B7DA3);
+  static final dayDateLight = Color(0xffAEAFC6);
+  static final disableTextLight = Color(0xffBABBC2);
+  static final menuIconLight = Color(0xff545468);
+  static final addButtonLight = Color(0xff3D79B1);
 
   // colors for dark theme
   static final bgDark = Color(0xff31315b);
@@ -12,12 +20,13 @@ class AppColors {
   static final disableTextDark = Color(0xffA4A4C0);
   static final menuIconDark = Color(0xff6B6B89);
 
-  // colors for light theme
-  static final bgLight = Color(0xffFDFDFD);
-  static final bgAddTaskFieldLight = Color(0xffEBF1F5);
-  static final textLight = Color(0xff8F8F9E);
-  static final textLabelLight = Color(0xff7B7DA3);
-  static final dayDateLight = Color(0xffAEAFC6);
-  static final disableTextLight = Color(0xffBABBC2);
-  static final menuIconLight = Color(0xff545468);
+
+  // color assignment for light mode
+  static final bg = bgLight;
+  static final bgAddTaskField = bgAddTaskFieldLight;
+  static final text = textLight;
+  static final textLabel = textLabelLight;
+  static final dayDate = dayDateLight;
+  static final disableText = disableTextLight;
+  static final menuIcon = menuIconLight;
 }

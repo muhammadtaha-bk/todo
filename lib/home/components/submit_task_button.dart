@@ -2,17 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 class SubmitTaskButton extends StatelessWidget {
-  final TextEditingController title;
-  final TextEditingController? description;
-  final TextEditingController? startDate;
-  final TextEditingController? startTime;
   final VoidCallback onPressed;
 
   SubmitTaskButton({
-    required this.title,
-    this.description,
-    this.startDate,
-    this.startTime,
     required this.onPressed,
   });
 
@@ -20,6 +12,7 @@ class SubmitTaskButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
+      margin: EdgeInsets.only(bottom: 32.h),
       child: ElevatedButton(
         style: ButtonStyle(
           elevation: MaterialStateProperty.all(0.0),

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:hive/hive.dart';
 import 'package:provider/provider.dart';
 import 'package:todo/globals/colors.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -8,13 +9,50 @@ import 'package:todo/globals/vertical_sized_box.dart';
 import 'package:todo/home/components/completed_item_card.dart';
 import 'package:todo/home/components/todo_item_card.dart';
 import 'package:todo/home/home_state.dart';
+import 'package:todo/model/task.dart';
+import 'package:hive_flutter/hive_flutter.dart';
+import 'package:todo/state.dart';
 
 class HomeView extends StatelessWidget {
+  final GlobalKey<ScaffoldState> _scaffoldKey = new GlobalKey<ScaffoldState>();
+
   @override
   Widget build(BuildContext context) {
     final state = Provider.of<HomeState>(context, listen: true);
+    final appState = Provider.of<AppState>(context, listen: true);
     return Scaffold(
-      backgroundColor: AppColors.bgLight,
+      key: _scaffoldKey,
+      drawer: Drawer(
+        child: Container(
+          color: appState.appTheme == AppTheme.LIGHT
+              ? AppColors.bgLight
+              : AppColors.bgDark,
+          child: appState.appTheme == AppTheme.LIGHT
+              ? IconButton(
+                  onPressed: () {
+                    appState.toggleTheme(AppTheme.LIGHT);
+                  },
+                  icon: Icon(
+                    Icons.wb_sunny_rounded,
+                    color: Colors.amberAccent,
+                    size: 120.sp,
+                  ),
+                )
+              : IconButton(
+                  onPressed: () {
+                    appState.toggleTheme(AppTheme.DARK);
+                  },
+                  icon: Icon(
+                    Icons.nightlight_round_rounded,
+                    color: Colors.purpleAccent,
+                    size: 120.sp,
+                  ),
+                ),
+        ),
+      ),
+      backgroundColor: appState.appTheme == AppTheme.LIGHT
+          ? AppColors.bgLight
+          : AppColors.bgDark,
       body: SingleChildScrollView(
         child: SafeArea(
           child: Column(
@@ -27,10 +65,14 @@ class HomeView extends StatelessWidget {
                       children: [
                         IconButton(
                           onPressed: () {
-                            print('pressed');
+                            _scaffoldKey.currentState!.openDrawer();
                           },
                           icon: Icon(
                             Icons.menu_outlined,
+                            color: appState.appTheme == AppTheme.LIGHT
+                                ? Color(0xff000000)
+                                : Color(0xff6e6e8c),
+                            //
                             size: 112.sp,
                           ),
                         ),
@@ -48,10 +90,12 @@ class HomeView extends StatelessWidget {
                               width: 12.w,
                             ),
                             Text(
-                              'easyapproach'.toUpperCase(),
+                              appState.username.toUpperCase(),
                               style: TextStyle(
                                 fontSize: 72.sp,
-                                color: AppColors.textLabelLight,
+                                color: appState.appTheme == AppTheme.LIGHT
+                                    ? AppColors.textLabelLight
+                                    : AppColors.textLabelDark,
                               ),
                             ),
                           ],
@@ -64,6 +108,9 @@ class HomeView extends StatelessWidget {
                       readOnly: true,
                       showCursor: true,
                       decoration: InputDecoration(
+                        hintStyle: appState.appTheme == AppTheme.LIGHT
+                            ? TextStyle(color: Color(0xff6e6f84))
+                            : TextStyle(color: Color(0xffC1C1DD)),
                         contentPadding: EdgeInsets.symmetric(
                           vertical: 8.h,
                           horizontal: 32.w,
@@ -83,9 +130,11 @@ class HomeView extends StatelessWidget {
                           borderSide:
                               BorderSide(color: Colors.transparent, width: 0.0),
                         ),
-                        fillColor: AppColors.bgAddTaskFieldLight,
+                        fillColor: appState.appTheme == AppTheme.LIGHT
+                            ? AppColors.bgAddTaskFieldLight
+                            : AppColors.bgAddTaskFieldDark,
                         filled: true,
-                        hintText: 'Add Item',
+                        hintText: 'Add Task',
                         suffixIcon: Container(
                           margin: EdgeInsets.all(16.r),
                           child: CircleAvatar(
@@ -111,29 +160,87 @@ class HomeView extends StatelessWidget {
                   children: [
                     LabelText(text: 'Todo'),
                     SizedBox(height: 12.h),
-                    ListView.builder(
-                      physics: NeverScrollableScrollPhysics(),
-                      itemCount: state.todoList.length,
-                      itemBuilder: (context, index) {
-                        return TodoItemCard(
-                            todoTask: state.todoList.elementAt(index), onMarkComplete: () {
-                              state.completeTask(index);
-                        },);
+                    // TODO: todo task list
+                    ValueListenableBuilder(
+                      valueListenable: appState.taskBox.listenable(),
+                      builder: (context, Box<Task> todoTasks, child) {
+                        return todoTasks.isEmpty
+                            ? Container(
+                                width: double.infinity,
+                                decoration: BoxDecoration(
+                                  color: appState.appTheme == AppTheme.LIGHT
+                                      ? Colors.white
+                                      : Color(0xff44446B),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.grey.withOpacity(0.07),
+                                      spreadRadius: 2,
+                                      blurRadius: 8,
+                                    ),
+                                  ],
+                                ),
+                                child: Center(
+                                  child: Padding(
+                                    padding:
+                                        EdgeInsets.symmetric(vertical: 40.h),
+                                    child: Text(
+                                      "Nothing to do",
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.w400,
+                                        color:
+                                            appState.appTheme == AppTheme.LIGHT
+                                                ? AppColors.textLabelLight
+                                                : AppColors.textLabelDark,
+                                        letterSpacing: 2.0,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              )
+                            : ListView.separated(
+                                physics: NeverScrollableScrollPhysics(),
+                                shrinkWrap: true,
+                                itemCount: appState.todoList.length,
+                                separatorBuilder: (context, _) => SizedBox(
+                                  height: 32.h,
+                                ),
+                                itemBuilder: (context, index) {
+                                  return TodoItemCard(
+                                    todoTask:
+                                        appState.todoList.elementAt(index),
+                                    onMarkComplete: () {
+                                      appState.completeTask(index);
+                                    },
+                                  );
+                                },
+                              );
                       },
-                      shrinkWrap: true,
                     ),
                     VerticalSizedBox(),
                     LabelText(text: 'Completed'),
                     SizedBox(height: 12.h),
-                    ListView.builder(
-                      physics: NeverScrollableScrollPhysics(),
-                      itemCount: state.completedList.length,
-                      itemBuilder: (context, index) {
-                        return CompletedItemCard(
-                            completedTask:
-                                state.completedList.elementAt(index),);
+                    // TODO: completed task list
+                    ValueListenableBuilder(
+                      valueListenable: appState.taskBox.listenable(),
+                      builder: (context, Box<Task> completedTasks, child) {
+                        return ListView.separated(
+                          shrinkWrap: true,
+                          physics: NeverScrollableScrollPhysics(),
+                          itemCount: appState.completedList.length,
+                          separatorBuilder: (context, _) => SizedBox(
+                            height: 32.h,
+                          ),
+                          itemBuilder: (context, index) {
+                            return CompletedItemCard(
+                              completedTask:
+                                  appState.completedList.elementAt(index),
+                              onDelete: () {
+                                appState.deleteTask(index);
+                              },
+                            );
+                          },
+                        );
                       },
-                      shrinkWrap: true,
                     ),
                   ],
                 ),
